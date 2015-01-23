@@ -48,7 +48,7 @@ func (p *Packet) ReadInt() (value int, err error) {
 	n := len(p.buf)
 
 	if n < 1 {
-		err = errors.New("extinfo: getInt: buf too short!")
+		err = errors.New("cubecode: buf too short!")
 		return
 	}
 
