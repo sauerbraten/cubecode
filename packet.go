@@ -127,7 +127,7 @@ func (p *Packet) ReadString() (s string, err error) {
 	for value != 0x00 {
 		codepoint := uint8(value)
 
-		s += string(cubeCodeChars[codepoint])
+		s += string(cubeToUni[codepoint])
 
 		value, err = p.ReadInt()
 		if err != nil {
