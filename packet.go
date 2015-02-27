@@ -135,7 +135,7 @@ func (p *Packet) ReadString() (s string, err error) {
 		}
 	}
 
-	return s, err
+	return
 }
 
 // Removes C 0x00 bytes and sauer color codes from strings (e.g.  \f3 etc. from server description).
