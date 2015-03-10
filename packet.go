@@ -138,7 +138,7 @@ func (p *Packet) ReadString() (s string, err error) {
 	return
 }
 
-// Removes C 0x00 bytes and sauer color codes from strings (e.g.  \f3 etc. from server description).
+// Removes C 0x00 bytes and sauer color codes from strings (e.g. \f3 etc. from server description).
 func SanitizeString(s string) string {
 	re := regexp.MustCompile("\\f.|\\x00")
 	return re.ReplaceAllLiteralString(s, "")
