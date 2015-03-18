@@ -3,6 +3,8 @@ package cubecode
 import (
 	"errors"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 type Packet struct {
@@ -28,8 +30,19 @@ func (p *Packet) HasRemaining() bool {
 }
 
 // Returns a part of the packet as new packet. Does not copy the underlying slice!
-func (p *Packet) SubPacket(start, end int) *Packet {
-	return NewPacket(p.buf[start:end])
+func (p *Packet) SubPacket(start, end int) (q *Packet, err error) {
+	if start < 0 || start > len(p.buf)-1 {
+		err = errors.New("cubecode: invalid start index for packet of length " + strconv.Itoa(len(p.buf)) + "!")
+		return
+	}
+
+	if end < 1 || end > len(p.buf) {
+		err = errors.New("cubecode: invalid end index for packet of length " + strconv.Itoa(len(p.buf)) + "!")
+		return
+	}
+
+	q = NewPacket(p.buf[start:end])
+	return
 }
 
 // Returns the next byte in the packet.
@@ -138,8 +151,11 @@ func (p *Packet) ReadString() (s string, err error) {
 	return
 }
 
-// Removes C 0x00 bytes and sauer color codes from strings (e.g. \f3 etc. from server description).
+// Matches sauer color codes (sauer uses form feed followed by a digit, e.g. \f3 for red)
+var sauerStringsSanitizer = regexp.MustCompile("\\f.")
+
+// Returns the string, cleared of sauer color codes
 func SanitizeString(s string) string {
-	re := regexp.MustCompile("\\f.|\\x00")
-	return re.ReplaceAllLiteralString(s, "")
+	s = sauerStringsSanitizer.ReplaceAllLiteralString(s, "")
+	return strings.TrimSpace(s)
 }
