@@ -7,11 +7,13 @@ import (
 	"strings"
 )
 
+// Packet represents a Sauerbraten UDP packet.
 type Packet struct {
 	buf      []byte
 	posInBuf int
 }
 
+// NewPacket returns a Packet using buf as the underlying buffer.
 func NewPacket(buf []byte) *Packet {
 	return &Packet{
 		buf:      buf,
@@ -19,17 +21,17 @@ func NewPacket(buf []byte) *Packet {
 	}
 }
 
-// Returns the amount of bytes in the packet.
+// Len returns the length of the packet in bytes.
 func (p *Packet) Len() int {
 	return len(p.buf)
 }
 
-// Returns true if there are bytes remaining in the packet.
+// HasRemaining returns true if there are bytes remaining to be read in the packet.
 func (p *Packet) HasRemaining() bool {
 	return p.posInBuf < len(p.buf)
 }
 
-// Returns a part of the packet as new packet. Does not copy the underlying slice!
+// SubPacket returns a part of the packet as new packet. It does not copy the underlying slice!
 func (p *Packet) SubPacket(start, end int) (q *Packet, err error) {
 	if start < 0 || start > len(p.buf)-1 {
 		err = errors.New("cubecode: invalid start index for packet of length " + strconv.Itoa(len(p.buf)))
@@ -45,17 +47,17 @@ func (p *Packet) SubPacket(start, end int) (q *Packet, err error) {
 	return
 }
 
-// Returns the next byte in the packet.
+// ReadByte returns the next byte in the packet.
 func (p *Packet) ReadByte() (byte, error) {
 	if p.posInBuf < len(p.buf) {
 		p.posInBuf++
 		return p.buf[p.posInBuf-1], nil
-	} else {
-		return 0, errors.New("cubecode: buf overread")
 	}
+
+	return 0, errors.New("cubecode: buf overread")
 }
 
-// Returns the value encoded in the next bytes of the packet.
+// ReadInt returns the integer value encoded in the next bytes of the packet.
 func (p *Packet) ReadInt() (value int, err error) {
 	// n is the size of the buffer
 	n := len(p.buf)
@@ -98,7 +100,7 @@ func (p *Packet) ReadInt() (value int, err error) {
 	return
 }
 
-// Returns a string of the next bytes up to 0x00.
+// ReadString returns a string of the next bytes up to 0x00.
 func (p *Packet) ReadString() (s string, err error) {
 	var value int
 	value, err = p.ReadInt()
@@ -123,7 +125,7 @@ func (p *Packet) ReadString() (s string, err error) {
 // Matches sauer color codes (sauer uses form feed followed by a digit, e.g. \f3 for red)
 var sauerStringsSanitizer = regexp.MustCompile("\\f.")
 
-// Returns the string, cleared of sauer color codes
+// SanitizeString returns the string, cleared of sauer color codes like \f3 for red.
 func SanitizeString(s string) string {
 	s = sauerStringsSanitizer.ReplaceAllLiteralString(s, "")
 	return strings.TrimSpace(s)
