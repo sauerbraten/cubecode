@@ -54,7 +54,7 @@ func (p *Packet) ReadByte() (byte, error) {
 		return p.buf[p.posInBuf-1], nil
 	}
 
-	return 0, errors.New("cubecode: buf overread")
+	return 0, errors.New("cubecode: buf overread at position " + strconv.Itoa(p.posInBuf))
 }
 
 // ReadInt returns the integer value encoded in the next bytes of the packet.
@@ -73,28 +73,31 @@ func (p *Packet) ReadInt() (value int, err error) {
 		return
 	}
 
-	moreBytes := 0
-
 	switch b {
 	case 0x80:
-		moreBytes = 2
+		value, err = p.readInt(2)
+		value = int(int16(value)) // fix sign of int to match the sign of the 16-bit representation
 	case 0x81:
-		moreBytes = 4
+		value, err = p.readInt(4)
 	default:
 		// neither 0x80 nor 0x81: value was already fully contained in the first byte
-		value = int(b)
-		return
+		value = int(int8(b)) // fix sign of int to match the sign of the 8-bit representation
 	}
 
-	var nextByte byte
+	return
+}
 
-	for i := 0; i < moreBytes; i++ {
-		nextByte, err = p.ReadByte()
+// readInt reads n bytes from the packet and decodes them into an int value.
+func (p *Packet) readInt(n int) (value int, err error) {
+	var b byte
+
+	for i := 0; i < n; i++ {
+		b, err = p.ReadByte()
 		if err != nil {
 			return
 		}
 
-		value += int(nextByte) << (8 * uint(i))
+		value += int(b) << (8 * uint(i))
 	}
 
 	return
