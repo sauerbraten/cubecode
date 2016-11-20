@@ -32,12 +32,12 @@ func (p *Packet) HasRemaining() bool {
 // Returns a part of the packet as new packet. Does not copy the underlying slice!
 func (p *Packet) SubPacket(start, end int) (q *Packet, err error) {
 	if start < 0 || start > len(p.buf)-1 {
-		err = errors.New("cubecode: invalid start index for packet of length " + strconv.Itoa(len(p.buf)) + "!")
+		err = errors.New("cubecode: invalid start index for packet of length " + strconv.Itoa(len(p.buf)))
 		return
 	}
 
 	if end < 1 || end > len(p.buf) {
-		err = errors.New("cubecode: invalid end index for packet of length " + strconv.Itoa(len(p.buf)) + "!")
+		err = errors.New("cubecode: invalid end index for packet of length " + strconv.Itoa(len(p.buf)))
 		return
 	}
 
@@ -51,7 +51,7 @@ func (p *Packet) ReadByte() (byte, error) {
 		p.posInBuf++
 		return p.buf[p.posInBuf-1], nil
 	} else {
-		return 0, errors.New("cubecode: buf overread!")
+		return 0, errors.New("cubecode: buf overread")
 	}
 }
 
@@ -61,7 +61,7 @@ func (p *Packet) ReadInt() (value int, err error) {
 	n := len(p.buf)
 
 	if n < 1 {
-		err = errors.New("cubecode: buf too short!")
+		err = errors.New("cubecode: buf too short")
 		return
 	}
 
