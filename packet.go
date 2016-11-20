@@ -65,65 +65,34 @@ func (p *Packet) ReadInt() (value int, err error) {
 		return
 	}
 
-	var b1 byte
-	b1, err = p.ReadByte()
+	var b byte
+	b, err = p.ReadByte()
 	if err != nil {
 		return
 	}
 
-	// 0x80 means: value is contained in the next 2 more bytes
-	if b1 == 0x80 {
+	moreBytes := 0
 
-		var b2, b3 byte
-
-		b2, err = p.ReadByte()
-		if err != nil {
-			return
-		}
-
-		b3, err = p.ReadByte()
-		if err != nil {
-			return
-		}
-
-		value = int(b2) + int(b3)<<8
+	switch b {
+	case 0x80:
+		moreBytes = 2
+	case 0x81:
+		moreBytes = 4
+	default:
+		// neither 0x80 nor 0x81: value was already fully contained in the first byte
+		value = int(b)
 		return
 	}
 
-	// 0x81 means: value is contained in the next 4 more bytes
-	if b1 == 0x81 {
+	var nextByte byte
 
-		var b2, b3, b4, b5 byte
-
-		b2, err = p.ReadByte()
+	for i := 0; i < moreBytes; i++ {
+		nextByte, err = p.ReadByte()
 		if err != nil {
 			return
 		}
 
-		b3, err = p.ReadByte()
-		if err != nil {
-			return
-		}
-
-		b4, err = p.ReadByte()
-		if err != nil {
-			return
-		}
-
-		b5, err = p.ReadByte()
-		if err != nil {
-			return
-		}
-
-		value = int(b2) + int(b3)<<8 + int(b4)<<16 + int(b5)<<24
-		return
-	}
-
-	// neither 0x80 nor 0x81: value was already fully contained in the first byte
-	if b1 > 0x7F {
-		value = int(b1) - int(1<<8)
-	} else {
-		value = int(b1)
+		value += int(nextByte) << (8 * uint(i))
 	}
 
 	return
