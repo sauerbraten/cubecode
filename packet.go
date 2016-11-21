@@ -31,6 +31,11 @@ func (p *Packet) HasRemaining() bool {
 	return p.posInBuf < len(p.buf)
 }
 
+// SubPacketFromRemaining returns a packet from the bytes remaining in p's buffer.
+func (p *Packet) SubPacketFromRemaining() (*Packet, error) {
+	return p.SubPacket(p.posInBuf, len(p.buf))
+}
+
 // SubPacket returns a part of the packet as new packet. It does not copy the underlying slice!
 func (p *Packet) SubPacket(start, end int) (q *Packet, err error) {
 	if start < 0 || start > len(p.buf)-1 {
