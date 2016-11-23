@@ -63,49 +63,64 @@ func (p *Packet) ReadByte() (byte, error) {
 }
 
 // ReadInt returns the integer value encoded in the next bytes of the packet.
-func (p *Packet) ReadInt() (value int, err error) {
+func (p *Packet) ReadInt() (int, error) {
 	// n is the size of the buffer
 	n := len(p.buf)
 
 	if n < 1 {
-		err = errors.New("cubecode: buf too short")
-		return
+		return -1, errors.New("cubecode: buf too short")
 	}
 
-	var b byte
+	var (
+		value int
+		err   error
+		b     byte
+	)
+
 	b, err = p.ReadByte()
 	if err != nil {
-		return
+		return -1, err
 	}
 
 	switch b {
-	case 0x80:
-		value, err = p.readInt(2)
-		value = int(int16(value)) // fix sign of int to match the sign of the 16-bit representation
-	case 0x81:
-		value, err = p.readInt(4)
 	default:
-		// neither 0x80 nor 0x81: value was already fully contained in the first byte
-		value = int(int8(b)) // fix sign of int to match the sign of the 8-bit representation
+		// most often, th value is only one byte
+		// convert to int and keep the sign of the 8-bit representation
+		value = int(int8(b))
+
+	case 0x80:
+		// value is contained in the next two bytes
+		value, err = p.readInt(2)
+		// make sure to keep the sign of the 16-bit representation
+		value = int(int16(value))
+
+	case 0x81:
+		// value is contained in the next four bytes
+		value, err = p.readInt(4)
+
 	}
 
-	return
+	return value, err
 }
 
 // readInt reads n bytes from the packet and decodes them into an int value.
-func (p *Packet) readInt(n int) (value int, err error) {
-	var b byte
+func (p *Packet) readInt(n int) (int, error) {
+	var (
+		value int
+		err   error
+		b     byte
+	)
 
 	for i := 0; i < n; i++ {
 		b, err = p.ReadByte()
 		if err != nil {
-			return
+			return -1, err
 		}
 
 		value += int(b) << (8 * uint(i))
 	}
 
-	return
+	return value, nil
 }
 
 // ReadString returns a string of the next bytes up to 0x00.
